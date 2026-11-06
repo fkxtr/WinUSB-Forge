@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a reproducible problem without private device data.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a security defect that could erase the wrong disk, follow SECURITY.md.
+        Never attach ISOs, drivers, credentials or complete serial numbers.
+        Para defectos de seguridad, consulta SECURITY.md. No adjuntes datos privados.
+  - type: input
+    id: version
+    attributes:
+      label: Version / Versión
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Distribution, kernel and relevant tool versions / Entorno
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps and command (redact personal paths) / Pasos
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual result / Resultado esperado y real
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Error code or reviewed reduced diagnostic / Evidencia revisada
+  - type: dropdown
+    id: evidence-kind
+    attributes:
+      label: Validation type / Tipo de prueba
+      options:
+        - Simulated device / Dispositivo simulado
+        - Synthetic regular-file image / Imagen sintética
+        - Real USB / USB real
+        - Read-only command / Comando de lectura

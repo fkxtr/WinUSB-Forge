@@ -1,0 +1,61 @@
+name: Checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install maintained tool packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends p7zip-full wimtools dosfstools mtools genisoimage
+      - name: Install development environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+      - name: Tests with simulated devices only
+        run: python -m pytest
+      - name: Static analysis and formatting
+        run: |
+          ruff check .
+          ruff format --check .
+          bandit -r src
+          mypy src --ignore-missing-imports
+          python -m compileall -q src tests
+      - name: Build and install wheel independently
+        run: |
+          python -m build
+          python -m venv /tmp/forge-wheel-check
+          /tmp/forge-wheel-check/bin/python -m pip install dist/*.whl
+          cd /tmp
+          /tmp/forge-wheel-check/bin/winusb-forge --help
+          /tmp/forge-wheel-check/bin/winusb-forge --lang es --help
+      - uses: actions/upload-artifact@v4
+        if: matrix.python == '3.12'
+        with:
+          name: winusb-forge-candidate
+          path: dist/
+  dependency-audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+          python scripts/audit_requirements.py > /tmp/forge-audit-requirements.txt
+          pip-audit --strict --no-deps --disable-pip --progress-spinner off -r /tmp/forge-audit-requirements.txt
